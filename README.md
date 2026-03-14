@@ -31,6 +31,12 @@ The platform also provides mitigation simulation capabilities, allowing stakehol
 
 ---
 
+![Dashboard Preview](assets/gov-1.jpg)
+![Dashboard Preview](assets/gov-2.jpg)
+![Dashboard Preview](assets/gov-3.jpg)
+![Dashboard Preview](assets/gov-4.jpg)
+
+
 ##  How It Works
 
 1. The user configures system attributes across:
