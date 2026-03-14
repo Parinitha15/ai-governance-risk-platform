@@ -4,7 +4,13 @@ import numpy as np
 import joblib
 import plotly.express as px
 import plotly.graph_objects as go
+from groq import Groq
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 # -------------------------------------------------
 # PAGE CONFIG
 # -------------------------------------------------
@@ -118,6 +124,39 @@ def encode_inputs():
         "impact_severity": ["Low","Medium","High"].index(st.session_state.impact_severity),
         "appeals_mechanism": 1 if st.session_state.appeals_mechanism == "Yes" else 0
     }])
+
+# -------------------------------------------------
+# GENERATE REPORT FUNCTION (GROQ)
+# -------------------------------------------------
+def generate_governance_report(score, risk_level, confidence):
+    prompt = f"""
+You are an AI governance and compliance expert.
+
+An AI system has been evaluated using a governance risk assessment platform.
+
+Risk Level: {risk_level}
+Exposure Score: {score}/100
+Model Confidence: {confidence:.2f}%
+
+Write a short professional governance assessment report that includes:
+
+1. Explanation of the risk level
+2. Key governance concerns
+3. Recommended mitigation actions
+
+Keep it clear, professional, and under 150 words.
+"""
+    try:
+        response = groq_client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=300
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        if "429" in str(e) or "rate_limit" in str(e).lower():
+            return "⚠️ API quota exceeded. Please wait a moment and try again."
+        return f"⚠️ Report generation failed: {str(e)}"
 
 # -------------------------------------------------
 # RUN ASSESSMENT
@@ -284,6 +323,22 @@ if "evaluated" in st.session_state:
         else:
             st.markdown(f"""
             <div style="background-color:#1A1F2B;padding:15px;border-radius:12px;margin-top:15px;">
-                <h4 style="color:#FFD600;">No Exposure Change</h4>
+               <h4 style="color:#FFD600;">No Exposure Change</h4>
             </div>
             """, unsafe_allow_html=True)
+
+    # -------------------------------------------------
+    # GENERATIVE AI GOVERNANCE REPORT
+    # -------------------------------------------------
+    st.divider()
+    st.subheader("🧠 AI Governance Report")
+
+    if st.button("Generate AI Risk Report"):
+        st.session_state["report"] = generate_governance_report(
+            st.session_state["risk_score"],
+            st.session_state["prediction"],
+            st.session_state["confidence"]
+        )
+
+    if "report" in st.session_state:
+        st.markdown(st.session_state["report"])
