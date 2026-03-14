@@ -60,6 +60,7 @@ The platform also provides mitigation simulation capabilities, allowing stakehol
 - Streamlit
 - Plotly
 - Joblib
+- AI-Generated Governance Reports (Powered by LLaMA 3.3 via Groq)
 
 ---
 
